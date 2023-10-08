@@ -231,17 +231,6 @@
             </div>
         </div>
 
-        <h4>Email Update</h4>
-        <div class="row contact-box">
-            <div class="col-lg-6">
-                <div class="form-group">
-                    <input type="email" id="currentEmail" placeholder="[Current Email Address]" disabled class="form-control smaller-placeholder"><br/>
-                    <input type="email" id="newEmail" placeholder="New Email Address" required autocomplete="off" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" class="form-control smaller-placeholder">
-                    <button type="button" class="btn btn-primary mt-2 main-btn half-size-btn" id="updateEmailBtn">Update Email</button>
-                </div>
-            </div>
-        </div>
-
         <h4>Password Update</h4>
         <div class="row contact-box">
             <div class="col-lg-6">
@@ -257,7 +246,7 @@
         <div class="row contact-box">
             <div class="col-lg-6">
                 <div class="form-group">
-                    <input type="tel" id="currentPhoneNumber" placeholder="Current Phone Number" required autocomplete="off" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" title="Enter a valid phone number." class="form-control smaller-placeholder"><br/>
+                    <input type="tel" id="currentPhoneNumber" placeholder="[Current Phone Number]" required autocomplete="off" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" title="Enter a valid phone number." class="form-control smaller-placeholder"><br/>
                     <input type="tel" id="newPhoneNumber" placeholder="New Phone Number" required autocomplete="off" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" title="Enter a valid phone number." class="form-control smaller-placeholder">
                     <button type="button" class="btn btn-primary mt-2 main-btn half-size-btn" id ="updatePhoneNumberBtn">Update Phone Number</button>
                 </div>
@@ -408,204 +397,144 @@
 <script src="/js/jquery-3.5.1.min.js"></script>
 <script>
     $(document).ready(function() {
-        // 로그인 상태 확인
-        checkAuthentication();
+        // 페이지 로드 시 사용자 정보 가져오기
+        $.ajax({
+            type: "GET",
+            url: "/getCurrentUserInfo",
 
-        // Add to Cart 버튼 클릭 이벤트
-        $('.addToCartButton').click(addToCartHandler);
+            success: function(data) {
+                // 데이터를 입력 필드에 설정
+                $("#currentName").val(data.name);
+                $("#currentEmail").val(data.username);
+                $("#currentPhoneNumber").val(data.phoneNumber);
+                $("#currentAddress").val(data.address);
+                $("#currentPostcode").val(data.postcode);
 
-        // Checkout button click event
-        $('#checkoutButton').click(checkoutHandler);
-
-        loadCartItems(); // 페이지 로드 시 장바구니 항목 로드
-
-        function addToCartHandler(e) {
-            e.preventDefault();
-            $.ajax({
-                url: '/check-authentication',
-                method: 'GET',
-                success: function(response) {
-                    if (response.authenticated) {
-                        let username = response.username;
-                        let productName = $(e.target).data('product-name');
-                        let amount = $(e.target).data('amount');
-                        $.ajax({
-                            url: '/cart',
-                            method: 'POST',
-                            data: {
-                                memberId: username,
-                                productName: productName,
-                                amount: amount
-                            },
-                            success: function(cartResponse) {
-                                if (cartResponse.status === "success") {
-                                    alert(cartResponse.message);
-                                    loadCartItems();  // 장바구니 목록 다시 불러오기
-                                } else {
-                                    alert(cartResponse.message);
-                                }
-                            }
-                        });
-                    } else {
-                        alert("로그인을 해주세요");
-                    }
-                }
-            });
-        }
-
-        function checkoutHandler(e) {
-            e.preventDefault();
-            $.ajax({
-                url: '/check-authentication',
-                method: 'GET',
-                success:function(response){
-                    if(response.authenticated){
-                        window.location.href="cart";
-                    }else{
-                        alert("로그인을 해주세요");
-                        window.location.href="/";  // 메인 페이지로 리다이렉션
-                    }
-                },
-                error:function(){
-                    alert("로그인 상태를 확인하는데 실패했습니다.");
-                }
-            });
-        }
-        // 로그인 상태 확인 함수
-        function checkAuthentication() {
-            $.ajax({
-                url: '/check-authentication',
-                method: 'GET',
-                success: function(response) {
-                    if (response.authenticated) {  // 인증된 경우 (세션이 유효한 경우)
-                        $('#loginBtn').hide();  // 로그인 버튼 숨김 처리
-                        $('#logoutBtn').show();  // 로그아웃 버튼 표시
-
-                        $('#logoutBtn').click(function(e) {  // 로그아웃 버튼 클릭 시 이벤트 핸들러 등록
-                            e.preventDefault();
-                            logout();
-                        });
-                    } else {  // 인증되지 않은 경우 (세션이 없거나 유효하지 않은 경우)
-                        $('#logoutBtn').hide();  // 로그아웃 버튼 숨김 처리
-                        $('#loginBtn').show();   // 로그인 버튼 표시
-                    }
-                }
-            });
-        }
-
-        // 로그아웃 함수
-        function logout() {
-            $.ajax({
-                url: '/logout',
-                method: 'POST',
-                success: function(response) {
-                    window.location.href = '/';
-                }
-            });
-        }
+                setUpEventListeners();
+            }
+        });
     });
 
-    $(document).ready(function() {
-        function loadCartItems() {
-            $.ajax({
-                url: '/check-authentication',
-                method: 'GET',
-                success: function(response) {
-                    if (response.authenticated) {
-                        let currentMemberId = response.username;
-
-                        $.ajax({
-                            url: '/get-cart-items',
-                            method: 'GET',
-                            data: { memberId: currentMemberId },
-                            success: function(response) {
-                                // cartItemsContainer ID를 사용하여 해당 위치 선택
-                                let cartItemsContainer2 = $('#cartItemsContainer2');
-                                cartItemsContainer2.empty();
-                                let totalAmount = response.reduce((sum, cartItem) => sum + parseFloat(cartItem.amount), 0);
-                                // 각 장바구니 항목에 대해 HTML 생성
-                                $('#subtotal-value').text(`$${totalAmount.toFixed(2)}`);
-                                $('#total-value').text(`$${totalAmount.toFixed(2)}`); // 할인이 없으므로 subtotal과 동일
-                                $('#checkoutButton').text(`Checkout $${totalAmount.toFixed(2)}`);
-                                $('#cartItemCount').text(response.length);
-                                response.forEach(cartItem => {
-                                    let imagePath = ""; // 이미지 경로를 저장할 변수
-
-                                    // productName에 따라 imagePath 설정
-                                    switch(cartItem.productName) {
-                                        case "PICO 4":
-                                            imagePath = "/images/35059704619.20221216134925.jpg";
-                                            break;
-                                        case "C920 PRO":
-                                            imagePath = "/images/16646684053.20181217180044.jpg";
-                                            break;
-                                        case "Oculus Quest 2":
-                                            imagePath = "/images/30612946625.20230130153345.jpg";
-                                            break;
-                                        case "VRlogy treadmill":
-                                            imagePath = "/images/KATWALKC2.jpg";
-                                            break;
-                                        case "VRlogy Program":
-                                            imagePath = "/images/KakaoTalk_Photo_2023-09-07-23-39-23.png";
-                                            break;
-                                        default:
-                                            imagePath = ""; // 기본 이미지 경로 (해당하는 productName이 없을 경우)
-                                            break;
-                                    }
-
-                                    let itemHtml2 = `
-                                    <div class="row cart-item">
-                                        <div class="col-sm-4 col-lg-4 cart-img">
-                                            <img src="${imagePath}" alt="${cartItem.productName}" class="img-fluid">
-                                            <a href="#" class="deleteCartItem" data-product-name="${cartItem.productName}"><i class="fa fa-trash" aria-hidden="true"></i></a>
-                                        </div>
-                                        <div class="col-sm-8 col-lg-8">
-                                            <h3>${cartItem.productName}</h3>
-                                            <span>$${cartItem.amount}</span>
-                                        </div>
-                                    </div>
-                                `;
-
-                                    cartItemsContainer2.append(itemHtml2);
-                                });
-
-                                // "x" 버튼 클릭 이벤트 핸들러 추가
-                                $('#cartItemsContainer2').on('click', '.deleteCartItem', function(e)  {
-                                    e.preventDefault();
-                                    let productName = $(this).data('product-name');
-                                    $.ajax({
-                                        url: '/delete-cart-item',
-                                        method: 'POST',
-                                        data: {
-                                            productName: productName,
-                                            memberId: currentMemberId,
-                                        },
-                                        success: function(deleteResponse) {
-                                            if (deleteResponse.status === "success") {
-                                                loadCartItems(); // 삭제 후, 장바구니 항목을 다시 로드
-                                            } else {
-                                                alert(deleteResponse.message);
-                                            }
-                                        },
-                                        error: function() {
-                                            alert("장바구니 항목을 삭제하는 데 실패했습니다.");
-                                        }
-                                    });
-                                });
-                            },
-                            error: function() {
-                                alert("장바구니 항목을 가져오는 데 실패했습니다.");
-                            }
-                        });
-                    } else {
-                        alert("로그인을 해주세요");
+        // Name Update
+        $("#updateNameBtn").click(function() {
+            let newName = $("#newName").val();
+            if (newName) {
+                $.ajax({
+                    type: "POST",
+                    url: "/mypage/updateName",
+                    data: { newName: newName },
+                    success: function(response) {
+                        if (response.success) {
+                            $("#currentName").val(newName);
+                            alert("Name updated successfully!");
+                        } else {
+                            alert("Error updating name.");
+                        }
                     }
-                }
-            });
-        }
+                });
+            }
+        });
 
-        loadCartItems(); // 페이지 로드 시 장바구니 항목 로드
-    });
+        // Email Update
+        $("#updateEmailBtn").click(function() {
+            let newEmail = $("#newEmail").val();
+            if (newEmail) {
+                $.ajax({
+                    type: "POST",
+                    url: "/mypage/updateEmail",
+                    data: { newEmail: newEmail },
+                    success: function(response) {
+                        if (response.success) {
+                            $("#currentEmail").val(newEmail);
+                            alert("Email updated successfully!");
+                        } else {
+                            alert("Error updating email.");
+                        }
+                    }
+                });
+            }
+        });
+
+        // Password Update
+        $("#updatePasswordBtn").click(function() {
+            let newPassword = $("#newPassword").val();
+            if (newPassword) {
+                $.ajax({
+                    type: "POST",
+                    url: "/mypage/updatePassword",
+                    data: { newPassword: newPassword },
+                    success: function(response) {
+                        if (response.success) {
+                            alert("Password updated successfully!");
+                        } else {
+                            alert("Error updating password.");
+                        }
+                    }
+                });
+            }
+        });
+
+        // Phone Number Update
+        $("#updatePhoneNumberBtn").click(function() {
+            let newPhoneNumber = $("#newPhoneNumber").val();
+            if (newPhoneNumber) {
+                $.ajax({
+                    type: "POST",
+                    url: "/mypage/updatePhoneNumber",
+                    data: { newPhoneNumber: newPhoneNumber },
+                    success: function(response) {
+                        if (response.success) {
+                            $("#currentPhoneNumber").val(newPhoneNumber);
+                            alert("Phone number updated successfully!");
+                        } else {
+                            alert("Error updating phone number.");
+                        }
+                    }
+                });
+            }
+        });
+
+        // Address Update
+        $("#updateAddressBtn").click(function() {
+            let newAddress = $("#newAddress").val();
+            if (newAddress) {
+                $.ajax({
+                    type: "POST",
+                    url: "/mypage/updateAddress",
+                    data: { newAddress: newAddress },
+                    success: function(response) {
+                        if (response.success) {
+                            $("#currentAddress").val(newAddress);
+                            alert("Address updated successfully!");
+                        } else {
+                            alert("Error updating address.");
+                        }
+                    }
+                });
+            }
+        });
+
+        // Postcode Update
+        $("#updatePostcodeBtn").click(function() {
+            let newPostcode = $("#newPostcode").val();
+            if (newPostcode) {
+                $.ajax({
+                    type: "POST",
+                    url: "/mypage/updatePostcode",
+                    data: { newPostcode: newPostcode },
+                    success: function(response) {
+                        if (response.success) {
+                            $("#currentPostcode").val(newPostcode);
+                            alert("Postcode updated successfully!");
+                        } else {
+                            alert("Error updating postcode.");
+                        }
+                    }
+                });
+            }
+        });
+
+
 </script>
 
 
