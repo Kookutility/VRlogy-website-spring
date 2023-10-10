@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.stereotype.Controller;
-
+import org.springframework.web.bind.annotation.ResponseBody;
+import java.util.HashMap;
+import java.util.Map;
 @Controller
 public class SignUpController {
 
@@ -22,12 +24,16 @@ public class SignUpController {
     }
 
     @PostMapping("/signup")
-    public String handleSignUp(@RequestParam("username") String username,
-                               @RequestParam("password") String password,
-                               @RequestParam("confirmPassword") String confirmPassword) {
-        if (!password.equals(confirmPassword)) {
-            // 비밀번호와 비밀번호 확인이 일치하지 않는 경우 에러 페이지로 리다이렉트하거나 에러 메시지 표시
-            return "redirect:/signup";
+    @ResponseBody
+    public Map<String, String> handleSignUp(@RequestParam("username") String username,
+                                            @RequestParam("password") String password,
+                                            @RequestParam(value = "confirmPassword", required = false) String confirmPassword)  {
+        Map<String, String> response = new HashMap<>();
+
+
+        if (signUpService.isUsernameAlreadyTaken(username)) {
+            response.put("result", "duplicate");
+            return response;
         }
 
         MemberInfo member = new MemberInfo();
@@ -36,7 +42,9 @@ public class SignUpController {
 
         signUpService.signUp(member);
 
-        return "redirect:/"; // 인덱스 페이지로 리다이렉트
+        response.put("result", "success");
+
+        return response; // 회원가입 성공 시 success 메시지 반환
     }
 }
 
