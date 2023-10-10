@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+    <meta name="_csrf" content="${_csrf.token}"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="keywords" content="HTML5 Template, eSports, Gaming, Bootstrap4, Responsive" />
+    <meta name="description" content="Logy - eSports & Gaming HTML Template" />
+    <title>Logy - SignUp</title>
+    <!--font-awesome icons link-->
+    <link rel="stylesheet" href="/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/slick.css">
+    <link rel="stylesheet" href="/css/venobox.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+
+</head>
+
+<body id="darkmode">
+
+    <!-- preloader part start -->
+    <div class="loader_screen preloader" id="preloader">
+        <div class="loader loader-box">
+            <svg viewBox="0 0 80 80">
+                <rect x="8" y="8" width="64" height="64"></rect>
+            </svg>
+        </div>
+    </div>
+    <!-- preloader part start -->
+
+    <!-- Login start -->
+    <div class="login-12">
+        <div class="container">
+            <div class="col-md-12 pad-0">
+                <div class="row login-box-12">
+                    <div class="col-lg-7 col-sm-12 col-pad-0 align-self-center">
+                        <div class="login-inner-form">
+                            <div class="details">
+                                <h3>Sign Up</h3>
+                                <form onsubmit="return handleSignUp()">
+                                    <!-- CSRF 토큰 추가 -->
+                                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+                                    <!-- 이메일, 비밀번호 입력 필드 등 -->
+                                    <div class="form-group">
+                                        <input type="email" id="signUpEmail" name="username" class="input-text" placeholder="Email" required> <!-- required 속성 추가 -->
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="password" id="signUpPassword" name="password" class="input-text" placeholder="Password" required> <!-- required 속성 추가 -->
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="password" id="confirmPassword" name="confirmPassword" class="input-text" placeholder="Confirm Password" required> <!-- required 속성 추가 -->
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="submit" id="signUpButton" class="btn-md btn-theme btn-block">Free Signup</button>
+                                    </div>
+                                </form>
+
+                            <p>Already have an account?<a href="login.html"> Login Now</a></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-12 col-sm-12 col-pad-0 bg-img align-self-center none-992">
+                        <a href="index.html" class="logoss">
+                            Logy<span>.</span>
+                        </a>
+                        <p>Step into the Future with logy: Elevating Reality through VR Treadmills and Software Solutions</p>
+                        <ul class="social-list clearfix">
+                            <li><a href="#"><i class="fa fa-facebook"></i></a></li>
+                            <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+                            <li><a href="#"><i class="fa fa-youtube-play"></i></a></li>
+                            <li><a href="#"><i class="fa fa-linkedin"></i></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Login end -->
+
+<!-- Optional JavaScript -->
+<script src="/js/jquery-3.3.1.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/slick.min.js"></script>
+<script src="/js/venobox.min.js"></script>
+<script src="/js/counterup.min.js"></script>
+<script src="/js/waypoints.min.js"></script>
+<script src="/js/custom.js"></script>
+    <script>
+        const handleSignUp= () => {
+            var signUpEmail = document.getElementById("signUpEmail").value;
+            var signUpPassword = document.getElementById("signUpPassword").value;
+            var confirmPassword = document.getElementById("confirmPassword").value;
+
+            if (signUpPassword !== confirmPassword) {
+                alert("비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+                return false;
+            }
+
+            var xhr = new XMLHttpRequest();
+
+            // CSRF 토큰 값을 가져옵니다.
+            var token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+
+            xhr.open('POST', '/signup', true);
+
+            // 요청 헤더에 CSRF 토큰 값을 추가합니다.
+            xhr.setRequestHeader('X-CSRF-TOKEN', token);
+
+            // 서버 응답 처리
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+
+                    // JSON 문자열을 자바스크립트 객체로 변환합니다.
+                    var response = JSON.parse(xhr.responseText);
+
+                    if (response.result === "success") {   // 속성 이름은 서버 응답에 따라 변경될 수 있습니다.
+                        alert("회원 가입이 완료되었습니다.");
+                        window.location.href = "/";
+                    } else if (response.result === "duplicate") {   // 속성 이름은 서버 응답에 따라 변경될 수 있습니다.
+                        alert("이미 사용 중인 이메일 주소입니다.");
+                    } else if (response.result === "error") {   // 속성 이름은 서버 응답에 따라 변경될 수 있습니다.
+                        alert("오류가 발생했습니다.");
+                    }
+                }
+            };
+
+            // 요청 데이터 설정
+            var data = new FormData();
+            data.append('username', signUpEmail);
+            data.append('password', signUpPassword);
+
+            xhr.send(data);
+
+            return false; // 폼 제출을 여기서 처리하므로 false 반환
+        };
+    </script>
+</body>
+
+</html>
