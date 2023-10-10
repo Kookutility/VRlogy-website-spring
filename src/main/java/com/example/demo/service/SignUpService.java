@@ -13,6 +13,10 @@ public class SignUpService {
         this.memberRepository = memberRepository;
     }
 
+    public boolean isUsernameAlreadyTaken(String username) {
+        return memberRepository.countByUsername(username) > 0;
+    }
+
     public void signUp(MemberInfo member) {
         // no password encoding
         memberRepository.save(member);
